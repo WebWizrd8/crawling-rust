@@ -1,0 +1,388 @@
+syntax = "proto3";
+package api;
+
+service GatewayAdmin {
+    rpc CreateChain(CreateChainRequest) returns (CreateChainResponse);
+    rpc UpdateChain(UpdateChainRequest) returns (UpdateChainResponse);
+
+    //Tokens
+    rpc GrantJwt(GrantJwtRequest) returns (GrantJwtResponse);
+    rpc UpdateJwtValidity(UpdateJwtValidityRequest) returns (UpdateJwtValidityResponse);
+    
+}
+
+service Gateway {
+    // Alerts
+    rpc CreateAlert(CreateAlertRequest) returns (CreateAlertResponse);
+    rpc GetAlerts(GetAlertsRequest) returns (GetAlertsResponse);
+    rpc UpdateAlert(UpdateAlertRequest) returns (UpdateAlertResponse);
+    rpc DeleteAlert(DeleteAlertRequest) returns (DeleteAlertResponse);
+
+    // Notifications
+    rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+    rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse);
+
+    // Chains
+    rpc GetChains(GetChainsRequest) returns (GetChainsResponse);
+
+    //Broadcasts
+    rpc SendBroadcast(SendBroadcastRequest) returns (SendBroadcastResponse);
+}
+
+message UpdateAlertRequest {
+    UserAlert alert = 1;
+}
+
+message UpdateAlertResponse {
+    UserAlert alert = 1;
+}
+
+message DeleteAlertRequest {
+    string alert_id = 1;
+}
+
+message DeleteAlertResponse {
+}
+
+message GetNotificationsRequest {
+    uint64 page = 1;
+    string alert_id = 2;
+    optional TimeRange time = 3;
+    string user_id = 4;
+}
+// In nanoseconds
+message TimeRange{
+    //Defaults to 0 (Unix epoch)
+    optional int64 start = 1;
+    //Defaults to current system time on server
+    optional int64 end = 2;
+}
+
+message GetNotificationsResponse {
+    repeated AlertNotification notifications = 1;
+}
+
+message GetStatisticsRequest {
+    optional string alert_id = 1;
+    optional string user_id = 2;
+}
+
+message GetStatisticsResponse {
+    uint64 total_alerts = 1;
+    uint64 total_alerts_today = 2;
+    double avg_response_time = 3;
+    optional string creation_date = 4;
+    optional uint64 subscriber_count = 5;
+}
+message GrantJwtRequest{
+    string client_id = 1;
+    TokenMetadata metadata = 2;
+}
+
+message TokenMetadata{
+    string name = 1;
+    string webhook_endpoint = 2;
+}
+
+message GrantJwtResponse{
+    string jwt = 1;
+}
+
+message UpdateJwtValidityRequest{
+    string jwt = 1;
+    bool valid = 2;
+}
+
+message UpdateJwtValidityResponse{
+
+}
+
+message CreateChainRequest {
+    string name = 2;
+    string icon = 3;
+    ChainData chain_data = 6;
+}
+
+message CreateChainResponse {
+    Chain chain = 1;
+}
+message SendBroadcastRequest {
+    string message = 1;
+    string chain_id = 2;
+}
+
+message SendBroadcastResponse {}
+
+message UpdateChainRequest {
+    Chain chain = 1;
+}
+
+message UpdateChainResponse {
+    Chain chain = 1;
+}
+
+message GetChainsRequest {}
+message GetChainsResponse {
+    repeated Chain chains = 1;
+}
+
+message Chain {
+    enum Status {
+        ENABLED = 0;
+        DISABLED = 1;
+    }
+    
+    string id = 1;
+    string name = 2;
+    string icon = 3;
+    Status status = 4;
+    ChainData chain_data = 5;
+}
+
+
+message ChainData {
+    oneof chain_data {
+        CosmosChainData cosmos_chain_data = 1;  
+        CosmosEvmChainData cosmos_evm_chain_data = 2;  
+        EthChainData eth_chain_data = 3;  
+    }
+}
+
+message CosmosChainData {
+    string grpc_endpoint = 1;
+    string bech32_prefix = 2;
+}
+
+message CosmosEvmChainData {
+    CosmosChainData cosmos_chain_data = 1;
+    EthChainData eth_chain_data = 2;
+}
+
+message EthChainData {
+    string eth_rpc_endpoint = 1;
+}
+
+message GetAlertsRequest {
+    optional string alert_id = 1;
+    optional uint64 page = 2;
+    optional string user_id = 3;
+    optional int32 chain_id = 4;
+}
+
+message GetAlertsResponse {
+    repeated UserAlert alerts = 1;
+}
+
+message CreateAlertRequest {
+    string user_id = 1;
+    Alert alert = 2; 
+    string message = 3;
+    string chain_id = 5;
+    string name = 6;
+}
+
+
+message CreateAlertResponse {
+    UserAlert alert = 1;
+}
+
+
+message UserAlert {
+    enum Status {
+        Enabled = 0;
+        Disabled = 1;
+    }
+    string id = 1;
+    string user_id = 2;
+    Alert alert = 3; 
+    string message = 4;
+    Status status = 6;
+    string chain_id = 7;
+    AlertSource alert_source = 8;
+    string name = 9;
+    string created_at = 10;
+}
+
+message BackendUserAlert {
+    UserAlert user_alert = 1;
+    string client_id = 2;
+}
+
+enum AlertSource {
+    CosmosMsg = 0;
+    CosmosTx = 1;
+    EthLog = 2;
+    EthTx = 3;
+    ArchwaysBroadcast = 4;
+}
+
+
+message Alert {
+    oneof chain_alert {
+        CosmosAlert cosmos_alert = 1;
+        CosmosEvmAlert cosmos_evm_alert = 2;
+        EthAlert eth_alert = 3;
+        ArchwayBroadcastAlert archway_broadcast_alert = 4;
+    }
+    string metadata = 5;
+}
+
+message ArchwayBroadcastAlert{
+}
+
+message CosmosAlert {
+    oneof cosmos_alert {
+        AlertCosmosSendFunds alert_cosmos_send_funds = 1;
+        AlertCosmosMonitorFunds alert_cosmos_monitor_funds = 2;
+        AlertCosmosSmartContractEvents alert_cosmos_smart_contract_events = 3;
+        AlertCosmosTxOutcome alert_cosmos_tx_outcome = 4;
+    }
+}
+
+message CosmosEvmAlert {
+    oneof cosmos_evm_alert {
+        AlertEthMonitorFunds alert_eth_monitor_funds = 1;
+        AlertEthTxOutcome alert_eth_tx_outcome = 2;
+        AlertEthSmartContractEvents alert_eth_smart_contract_events = 3;
+        AlertCosmosMonitorFunds alert_cosmos_monitor_funds = 4;
+        AlertCosmosTxOutcome alert_cosmos_tx_outcome = 5;
+    }
+}
+
+message EthAlert {
+    oneof eth_alert {
+        AlertEthMonitorFunds alert_eth_monitor_funds = 1;
+        AlertEthTxOutcome alert_eth_tx_outcome = 2;
+        AlertEthSmartContractEvents alert_eth_smart_contract_events = 3;
+    }
+}
+
+message AlertEthSmartContractEvents {
+    string contract_addr = 1;
+    string contract_abi = 2;
+    string event_name = 3;
+    map<string,string> event_attributes = 4;
+}
+
+message AlertEthMonitorFunds {
+    string address = 1;
+}
+
+message AlertEthTxOutcome {
+    enum EthTxOutcome {
+        SUCCEEDED = 0;
+        FAILED = 1;
+    }
+
+    string signer = 1;
+    EthTxOutcome outcome = 2;
+}
+
+message AlertCosmosSmartContractEvents {
+    string address = 1;
+    map<string, string> event_attributes = 2;
+    string event_name = 3;
+}
+
+message AlertCosmosMonitorFunds {
+    string address = 1;
+}
+
+message AlertCosmosSendFunds {
+    string from = 1;
+    string to = 2;
+}
+message AlertCosmosBroadcast{
+    string message = 1;
+}
+message AlertCosmosTxOutcome {
+    enum CosmosTxOutcome {
+        SUCCEEDED = 0;
+        FAILED = 1;
+    }
+
+    string signer = 1;
+    CosmosTxOutcome outcome = 2;
+}
+
+message AlertNotification {
+    string id = 1;
+    AlertNotificationData notification_data = 2;
+    string alert_id = 3;
+    string alert_source_id = 4;
+    ResponseTime response_time = 5;
+}
+
+message ResponseTime{
+    double total_response_time = 1;
+    uint64 num_responses = 2;
+}
+
+message AlertNotificationData {
+    oneof alert_notification_data {
+        MonitorFundsCoinNotificationData monitor_funds_coin = 1;
+        MonitorFundsTokenNotificationData monitor_funds_token = 2;
+        TxOutcomeNotificationData tx_outcome = 3;
+        SmartContractEventsNotificationData sc_events = 4;
+        ArchwayBroadcastNotificationData archway_broadcast = 5;
+    }
+}
+
+message ArchwayBroadcastNotificationData{
+    string message = 1;
+}
+
+message SmartContractEventsNotificationData {
+    string contract_addr = 1;
+    string event_name = 2;
+    map<string,string> event_attributes = 3;
+    string tx_hash = 4;
+}
+
+message TxOutcomeNotificationData {
+    string signer = 1;
+    string outcome = 2;
+    string tx_hash = 3;
+}
+
+message MonitorFundsCoinNotificationData {
+    message CoinAmount {
+        string amount = 1;
+        string denom = 2;
+    }
+    string from = 1;
+    string to = 2;
+    repeated CoinAmount amount = 3;
+    string tx_hash = 4;
+    string monitored_address = 5;
+}
+
+message MonitorFundsTokenNotificationData {
+    string from = 1;
+    string to = 2;
+    string contract_addr = 3;
+    string amount = 4;
+    string tx_hash = 5;
+}
+
+message CrawlerData {
+    oneof crawler_data {
+        CosmosCrawlerData cosmos = 1;
+        CosmosEvmCrawlerData cosmos_evm = 2;
+        EthCrawlerData ethereum = 3;
+    }
+}
+
+message CosmosCrawlerData {
+    uint64 processed_blocks = 1;
+}
+
+message CosmosEvmCrawlerData {
+    CosmosCrawlerData cosmos = 1;
+    EthCrawlerData ethereum = 2;
+}
+
+message EthCrawlerData {
+    uint64 processed_blocks = 1;
+}
+

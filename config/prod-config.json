@@ -1,0 +1,11 @@
+{
+  "application_config": {
+	  "db_url": "",
+    "jwt_secret": [],
+    "admins": [
+      "shravanshetty322@gmail.com",
+      "shravan@mempools.com",
+      "octo@mempools.com"
+    ]
+  }
+}
