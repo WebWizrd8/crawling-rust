@@ -105,6 +105,16 @@ impl AlertStorage for DatabaseConnection {
             .duration_since(UNIX_EPOCH)?
             .as_nanos();
         let req = req.user_alert.ok_or("Missing user alert")?;
+
+        let mut query = db_entities::user_alert::Entity::find()
+            .filter(db_entities::user_alert::Column::Id.eq(req.id.parse::<i32>()?));
+
+        let mut alertExists = query.filter(db_entities::user_alert::Column::DeletedAt.is_null());
+
+        if (alertExists.one(self).await?.is_none()) {
+            return Err("Alert not found".into());
+        }
+
         let alert = db_entities::user_alert::ActiveModel {
             id: Set(req.id.parse::<i32>()?),
             message: Set(req.message),

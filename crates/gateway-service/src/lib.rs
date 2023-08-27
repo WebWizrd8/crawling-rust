@@ -82,6 +82,7 @@ impl Gateway for GatewayService {
         let alerts = alert_svc
             .get_alerts(
                 AlertFilter {
+                    id: req.alert_id,
                     user_id: req.user_id,
                     chain_id: req.chain_id,
                     ..Default::default()
