@@ -8,7 +8,7 @@ docker run --init -p 8123:8123 mempools-server-dev
 ```
 or run server using cargo
 ```
-cargo run -p mempools-server
+cargo run -p server
 ```
 Server will start running on port 8123
 

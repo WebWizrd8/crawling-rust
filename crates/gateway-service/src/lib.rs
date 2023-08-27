@@ -49,14 +49,13 @@ impl Gateway for GatewayService {
         let alert = alert_svc
             .create_alert(
                 request.get_ref(),
-                "testwebhook".to_string(),
-                // request
-                //     .extensions()
-                //     .get::<UserMetadata>()
-                //     .ok_or("Missing user metadata")
-                //     .to_grpc_result()?
-                //     .client_id
-                //     .clone(),
+                request
+                    .extensions()
+                    .get::<UserMetadata>()
+                    .ok_or("Missing user metadata")
+                    .to_grpc_result()?
+                    .client_id
+                    .clone(),
             )
             .await
             .to_grpc_result()?
@@ -118,13 +117,14 @@ impl Gateway for GatewayService {
                         .ok_or("could not find alert in request")
                         .to_grpc_result()?,
                 ),
-                client_id: request
-                    .extensions()
-                    .get::<UserMetadata>()
-                    .ok_or("Missing user metadata")
-                    .to_grpc_result()?
-                    .client_id
-                    .clone(),
+                client_id: "testwebhook".to_string(), // TODO: fix this
+                                                      // request
+                                                      //     .extensions()
+                                                      //     .get::<UserMetadata>()
+                                                      //     .ok_or("Missing user metadata")
+                                                      //     .to_grpc_result()?
+                                                      //     .client_id
+                                                      //     .clone(),
             })
             .await
             .to_grpc_result()?;
